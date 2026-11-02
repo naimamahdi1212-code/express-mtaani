@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}Users · Express Mtaani Admin{% endblock %}
+{% block admin %}
+<h1>Users</h1>
+<div class="cards">
+  <div class="card"><span class="card__num">{{ totals.get('customer', 0) }}</span><span class="card__label">Customers</span></div>
+  <div class="card"><span class="card__num">{{ totals.get('rider', 0) }}</span><span class="card__label">Riders</span></div>
+  <div class="card"><span class="card__num">{{ totals.get('admin', 0) }}</span><span class="card__label">Admins</span></div>
+</div>
+<form class="search" method="get" role="search" style="max-width:520px">
+  <label class="sr-only" for="q">Search users</label>
+  <input id="q" name="q" type="search" value="{{ q }}" placeholder="Search by name or email" maxlength="60">
+  {% if role %}<input type="hidden" name="role" value="{{ role }}">{% endif %}
+  <button class="btn btn--primary" type="submit">Search</button>
+</form>
+<nav class="chips" aria-label="Filter by role">
+  <a class="chip {{ 'is-active' if not role }}" href="{{ url_for('admin.users', q=q or None) }}">All</a>
+  {% for r in roles %}<a class="chip {{ 'is-active' if role == r }}" href="{{ url_for('admin.users', role=r, q=q or None) }}">{{ r|capitalize }}s</a>{% endfor %}
+</nav>
+{% if users %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Person</th><th>Role</th><th>Joined</th><th>Last sign-in</th><th>Activity</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for u in users %}
+    <tr>
+      <td data-label="Person">{{ u.name }}<br><span class="hint">{{ u.email }} · {{ u.phone }}</span></td>
+      <td data-label="Role">{{ u.role|capitalize }}</td>
+      <td data-label="Joined">{{ u.created_at.strftime('%d %b %Y') }}</td>
+      <td data-label="Last sign-in">{{ u.last_login_at.strftime('%d %b %Y, %H:%M') ~ ' UTC' if u.last_login_at else 'Never' }}</td>
+      <td data-label="Activity">
+        {% if u.role == 'customer' %}{{ ordered.get(u.id, 0) }} order(s)
+        {% elif u.role == 'rider' %}{{ delivered.get(u.id, 0) }} delivered{% else %}-{% endif %}
+      </td>
+      <td data-label="Status">
+        {% if not u.active %}<span class="badge badge--cancelled">Deactivated</span>
+        {% elif u.role == 'rider' and not u.approved %}<span class="badge badge--placed">Waiting for approval</span>
+        {% else %}<span class="badge badge--on_the_way">Active</span>{% endif %}
+      </td>
+      <td class="actions-cell">
+        {% if u.role != 'admin' and u.id != current_user.id %}
+        <form method="post" action="{{ url_for('admin.user_toggle', user_id=u.id, action='activate' if not u.active else 'deactivate') }}" class="inline-form"
+              {% if u.active %}onsubmit="return confirm('Deactivate {{ u.name|e }}? They will be signed out.');"{% endif %}>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="link-button" type="submit">{{ 'Reactivate' if not u.active else 'Deactivate' }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+<p class="hint">Showing the newest 200 matches.</p>
+{% else %}<p class="empty">No users match.</p>{% endif %}
+{% endblock %}

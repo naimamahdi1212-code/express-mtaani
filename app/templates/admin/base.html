@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin">
+  <aside class="admin__nav" aria-label="Admin">
+    <p class="admin__title">Admin</p>
+    {% set here = request.endpoint %}
+    <a href="{{ url_for('admin.dashboard') }}" {% if here == 'admin.dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
+    <a href="{{ url_for('admin.orders') }}" {% if here and here.startswith('admin.order') %}aria-current="page"{% endif %}>Orders</a>
+    <a href="{{ url_for('admin.products') }}" {% if here and here.startswith('admin.product') %}aria-current="page"{% endif %}>Products</a>
+    <a href="{{ url_for('admin.shops') }}" {% if here and here.startswith('admin.shop') %}aria-current="page"{% endif %}>Shops</a>
+    <a href="{{ url_for('admin.riders') }}" {% if here and here.startswith('admin.rider') %}aria-current="page"{% endif %}>Riders</a>
+    <a href="{{ url_for('admin.users') }}" {% if here and here.startswith('admin.user') %}aria-current="page"{% endif %}>Users</a>
+    <a href="{{ url_for('admin.system') }}" {% if here == 'admin.system' %}aria-current="page"{% endif %}>System</a>
+  </aside>
+  <div class="admin__main">{% block admin %}{% endblock %}</div>
+</div>
+{% endblock %}
